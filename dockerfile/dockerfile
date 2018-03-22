@@ -1,0 +1,6 @@
+#Start from Scratch
+FROM scratch
+#Copy binary
+COPY galley galley
+#Run binary
+CMD ["./galley"]
