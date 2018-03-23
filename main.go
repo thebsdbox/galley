@@ -41,8 +41,8 @@ func main() {
 	webserverFlag := flag.Bool("webserver", envIsEnabled("galley_webserver"), "Enable the API and health check webserver")
 	initFlag := flag.Bool("initStorage", false, "Initialise the StorageDevice")
 	forceFlag := flag.Bool("force", false, "Force an operation, CAUTION can cause data-loss")
-
-	logLevel := flag.Int("logging", envIsNumber("galley_logging", 0, 5, 2), "Set logging 0 = none, 5 = debug")
+	logLevel := flag.Int("logging", envIsNumber("galley_logging", 0, 5, 4), "Set logging 0 = none, 5 = debug")
+	blockFlag := flag.Bool("block", false, "Initialise the StorageDevice")
 
 	flag.Parse()
 
@@ -62,12 +62,28 @@ func main() {
 	if *initFlag == true {
 		header, err := storage.ReadHeader(storagePath)
 		if err != nil {
-			log.Errorf("%v", err)
+			log.Fatalf("%v", err)
 		}
 		if storage.HeaderMatches(header) == true && *forceFlag != true {
 			log.Fatalln("Galley formatted disk, use --force to wipe storage")
 		}
 		storage.InitialiseDisk(storagePath)
+		os.Exit(0)
+	}
+
+	if *blockFlag == true {
+		header, err := storage.ReadHeader(storagePath)
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+		if storage.HeaderMatches(header) == true {
+			err = storage.AddBlock(storagePath)
+			if err != nil {
+				log.Fatalf("%v", err)
+			}
+		} else {
+			log.Fatalln("Unformatted Disk")
+		}
 		os.Exit(0)
 	}
 

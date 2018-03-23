@@ -31,13 +31,13 @@ func DetectStorage(path string) error {
 
 	// Check for devices
 	if pathInfo.Mode() == os.ModeDevice {
-
+		log.Debugln("Device Mode Starting")
 	}
 
 	// Originally was the IsRegular method
 	if pathInfo.Mode()&(os.ModeType|os.ModeCharDevice) == 0 {
 		// Regular file
-		log.Debugln("File Mode starting ")
+		log.Debugln("File Mode starting")
 		if pathInfo.Size() == 0 {
 			return fmt.Errorf("File Size is zero")
 		}
@@ -45,14 +45,18 @@ func DetectStorage(path string) error {
 		if err != nil {
 			return err
 		}
-		log.Debugf("Disk Header: v%s.%s", string(header.Version[0]), string(header.Version[1]))
+		// Debug output about the Disk Image
+		log.Debugf("Disk Header Version: v%s.%s", string(header.Version[0]), string(header.Version[1]))
+		log.Debugf("Disk UUID: %s", header.UUID.String())
+		log.Debugf("Header Size: %d", header.Size)
+		log.Debugf("Disk Size: %d", header.DiskSize)
+		log.Debugf("Block Count: %d", header.BlockCount)
 
 		if HeaderMatches(header) == true {
 			log.Println("Disk header Matches")
 		} else {
 			log.Warnln("Incorrect Disk Header")
 		}
-
 	}
 	return nil
 }
@@ -61,6 +65,15 @@ func DetectStorage(path string) error {
 func InitialiseDisk(path string) error {
 
 	err := WriteHeader(path, NewHeader())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// AddBlock - Add another storage block
+func AddBlock(path string) error {
+	err := WriteBlock(path)
 	if err != nil {
 		return err
 	}
