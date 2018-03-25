@@ -15,7 +15,6 @@ var header = [4]byte{0x70, 0x6f, 0x6f, 0x70}
 // Magic for block
 var block = [2]byte{0x5c, 0x24}
 
-// Default is set to 10MB
 var blockSize uint64
 
 // DiskHeader - The storage Header is present at the beginning of any storage being used by galley
@@ -41,7 +40,8 @@ type DiskBlock struct {
 }
 
 func init() {
-	blockSize = 10485760
+	// Default is set to 512KB
+	blockSize = 512000
 }
 
 //NewHeader - creates a new default header populated with fixed length values
@@ -76,7 +76,6 @@ func HeaderMatches(readHeader *DiskHeader) bool {
 func ReadHeader(path string) (*DiskHeader, error) {
 	header := DiskHeader{}
 	headerSize := binary.Size(header)
-	log.Debugf("Attempting to read %d bytes of header", headerSize)
 
 	file, err := os.Open(path)
 	defer file.Close()
@@ -90,7 +89,7 @@ func ReadHeader(path string) (*DiskHeader, error) {
 		return nil, err
 	}
 
-	log.Debugf("Read %d bytes from file %s", bytesRead, path)
+	log.Debugf("Read %d header bytes from file %s", bytesRead, path)
 
 	buffer := bytes.NewBuffer(binaryData)
 	err = binary.Read(buffer, binary.BigEndian, &header)
@@ -105,7 +104,6 @@ func ReadHeader(path string) (*DiskHeader, error) {
 func WriteHeader(path string, header *DiskHeader) error {
 	log.Printf("Initialising Disk [%s]", path)
 	headerSize := binary.Size(header)
-	log.Debugf("Attempting to write %d bytes of header", headerSize)
 
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	defer file.Close()
@@ -129,7 +127,7 @@ func WriteHeader(path string, header *DiskHeader) error {
 	if err != nil {
 		return err
 	}
-	log.Debugf("Written %d bytes to file %s", bytesWritten, path)
+	log.Debugf("Written %d of %d header bytes to file %s", bytesWritten, headerSize, path)
 	log.Printf("Initialised Disk ID: %s", header.UUID.String())
 	return nil
 }

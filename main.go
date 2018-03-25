@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 
+	"github.com/thebsdbox/galley/pkg/nbd"
 	"github.com/thebsdbox/galley/pkg/storage"
 	"github.com/thebsdbox/galley/pkg/webserver"
 
@@ -95,4 +98,11 @@ func main() {
 	if err != nil {
 		log.Errorf("%v", err)
 	}
+	serverCtx := context.Background()
+	sessionCtx := context.Background()
+	var sessionWaitGroup sync.WaitGroup
+	nbdConfig := nbd.ServerConfig{}
+	nbdConfig.Protocol = "tcp"
+	nbdConfig.Address = "127.0.0.1:6666"
+	nbd.StartServer(serverCtx, sessionCtx, &sessionWaitGroup, nil, nbdConfig)
 }
